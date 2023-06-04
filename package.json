@@ -1,0 +1,29 @@
+{
+  "name": "get-list",
+  "version": "1.0.0",
+  "description": "get-list example for cloud devops capstone project",
+  "main": "src/index.js",
+  "engines": {
+    "node": "=18.16.0",
+    "npm": "=7.19.1"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "lint": "npx eslint .",
+    "start": "node .",
+    "test": "jest --verbose --silent"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.2",
+    "eslint": "^8.42.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.27.5",
+    "jest": "^29.5.0"
+  }
+}
