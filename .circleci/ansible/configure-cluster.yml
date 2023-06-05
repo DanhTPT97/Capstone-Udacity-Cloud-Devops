@@ -7,5 +7,5 @@
   vars:
     ENV_NAME: "{{ lookup('env', 'ENV_NAME') }}"
   roles:
-    - get-list-backend-service-deployment
-    - get-list-backend-service
+    - backend-service-deployment
+    - backend-service
