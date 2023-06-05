@@ -20,3 +20,6 @@
         content: "{{ elb_dns.stdout }}"
         dest: "~/elb_dns.txt"
       delegate_to: localhost
+  roles:
+    - backend-service-deployment
+    - backend-service
