@@ -127,7 +127,7 @@ jobs:
   
   configure-infrastructure:
     docker:
-      - image: cimg/node:18.16.0
+      - image: python:3.11-rc-alpine
     steps:
       - checkout
       - add_ssh_keys:
@@ -153,7 +153,7 @@ jobs:
               fi
   configure-cluster:
     docker:
-      - image: cimg/node:18.16.0
+      - image: python:3.11-rc-alpine
     steps:
       - checkout
       - add_ssh_keys:
@@ -203,7 +203,7 @@ jobs:
 
   deploy-docker:
     docker:
-      - image: cimg/node:18.16.0
+      - image: python:3.11-rc-alpine
     steps:
       - checkout
       - add_ssh_keys:
