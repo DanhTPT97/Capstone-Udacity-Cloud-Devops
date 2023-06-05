@@ -42,6 +42,7 @@ jobs:
       - run:
           name: Build docker image
           command: |
+            cd backend
             sudo docker build -t $IMAGE_NAME:latest .
             sudo docker images ls
       - run:
