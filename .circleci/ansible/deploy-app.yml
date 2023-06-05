@@ -1,0 +1,18 @@
+- name: "Deploy latest app"
+  hosts: management[0]
+  user: ubuntu
+  gather_facts: false
+  become: yes
+  vars:
+    ENV_NAME: "{{ lookup('env', 'ENV_NAME') }}"
+    IMAGE_NAME: "{{ lookup('env', 'IMAGE_NAME') }}"
+  tasks:
+    - name: Update the deployment to run the latest Build
+      shell: "./bin/kubectl set image deployments/{{ ENV_NAME }}-deployment {{ ENV_NAME }}=danhtran210/{{ ENV_NAME }}:latest"
+      args:
+        chdir: $HOME
+
+    - name: Check if deployment ist successful
+      shell: "./bin/kubectl rollout status deployments/{{ ENV_NAME }}-deployment"
+      args:
+        chdir: $HOME

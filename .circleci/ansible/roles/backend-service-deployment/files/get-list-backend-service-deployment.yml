@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: get-list-backend-service-backend-service-deployment
+  labels:
+    app: get-list-backend-service-backend-service
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: get-list-backend-service
+  template:
+    metadata:
+      labels:
+        app: get-list-backend-service
+    spec:
+      containers:
+        - name: get-list-backend-service
+          image: danhtran210/get-list-backend-service
+          ports:
+            - containerPort: 3000

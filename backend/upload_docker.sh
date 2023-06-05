@@ -5,13 +5,13 @@
 
 # Step 1:
 # Create dockerpath
-dockerpath=danhtran210/get-list-api
+dockerpath=danhtran210/get-list-backend-service
 
 # Step 2:  
 # Authenticate & tag
 echo "Docker ID and Image: $dockerpath"
 
-docker tag get-list-api $dockerpath:latest
+docker tag get-list-backend-service $dockerpath:latest
 docker login
 
 # Step 3:

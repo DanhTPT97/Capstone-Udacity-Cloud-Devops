@@ -5,8 +5,8 @@
 # Step 1:
 # This is your Docker ID/path
 # dockerpath=<>
-dockerpath=danhtran210/get-list-api
-podname=capstone-get-list-api
+dockerpath=danhtran210/get-list-backend-service
+podname=capstone-get-list-backend-service
 # Step 2
 # Run the Docker Hub container with kubernetes
 iscreated=$(kubectl get pod $podname 2> /dev/null; echo $?)
@@ -14,7 +14,7 @@ if [ "$iscreated" == "1" ]
 then
     kubectl run $podname \
     --image=$dockerpath \
-    --port=3000 --labels app=get-list-api
+    --port=3000 --labels app=get-list-backend-service
 fi
 
 isready=false

@@ -1,0 +1,11 @@
+---
+- name: "Configure with kubectl"
+  hosts: management[0]
+  user: ubuntu
+  gather_facts: false
+  become: yes
+  vars:
+    ENV_NAME: "{{ lookup('env', 'ENV_NAME') }}"
+  roles:
+    - get-list-backend-service-deployment
+    - get-list-backend-service

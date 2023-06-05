@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Back-end test
+          name: Backend test
           command: |
             cd backend
             npm install
@@ -23,7 +23,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Back-end audit
+          name: Backend audit
           command: |
             cd backend
             npm install
@@ -31,8 +31,6 @@ jobs:
             npm audit fix --audit-level=critical --force
   
   build-image:
-    environment:
-        IMAGE_NAME: get-list-api
     docker:
       - image: cimg/node:18.16.0
     steps:
