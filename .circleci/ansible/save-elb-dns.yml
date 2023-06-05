@@ -8,7 +8,7 @@
     ENV_NAME: "{{ lookup('env', 'ENV_NAME') }}"
   tasks:
     - name: Get services
-      shell: "./bin/kubectl get svc"
+      shell: "kubectl get svc"
     - name: Get the LoadBalancer's DNS name
       shell: "./bin/kubectl get svc {{ ENV_NAME }}"
       register: elb_dns
@@ -20,5 +20,3 @@
         content: "{{ elb_dns.stdout }}"
         dest: "~/elb_dns.txt"
       delegate_to: localhost
-  roles:
-    - install-kubectl
