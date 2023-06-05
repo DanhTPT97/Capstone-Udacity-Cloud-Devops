@@ -11,9 +11,9 @@
     "test": "test"
   },
   "scripts": {
-    "lint": "npx eslint .",
     "start": "node .",
-    "test": "jest --verbose --silent"
+    "test": "jest --verbose --silent",
+    "lint": "npx eslint ."
   },
   "dependencies": {
     "express": "^4.17.1"

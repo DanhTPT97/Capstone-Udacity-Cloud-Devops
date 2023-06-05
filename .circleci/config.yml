@@ -1,0 +1,241 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/configuration-reference
+version: 2.1
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/configuration-reference/#jobs
+jobs:
+  test-backend:
+    docker:
+      - image: cimg/node:18.16.0
+    steps:
+      - checkout
+      - run:
+          name: Back-end test
+          command: |
+            cd backend
+            npm install
+            npm run test
+
+  scan-backend:
+    docker:
+      - image: cimg/node:18.16.0
+    steps:
+      - checkout
+      - run:
+          name: Back-end audit
+          command: |
+            cd backend
+            npm install
+            npm run lint
+            npm audit fix --audit-level=critical --force
+  
+  build-image:
+    environment:
+        IMAGE_NAME: get-list-api
+    docker:
+      - image: cimg/node:18.16.0
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+      - run:
+          name: Build docker image
+          command: |
+            sudo docker build -t $IMAGE_NAME:latest .
+            sudo docker images ls
+      - run:
+          name: Upload Docker image to Dockerhub
+          command: |
+            echo "Docker ID and Image: $IMAGE_NAME"
+            sudo docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASS"
+            sudo docker tag $IMAGE_NAME $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
+            sudo docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
+
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli:2.11.20
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: yum install -y tar gzip
+      - run:
+          name: Deploy networking infrastructure
+          command: |
+            cd .circleci
+            aws cloudformation deploy \
+              --stack-name "${ENV_NAME}-network" \
+              --region ${AWS_DEFAULT_REGION} \
+              --template-file cloudformation/network.yml \
+              --parameter-overrides file://cloudformation/network-parameters.json
+      - run:
+          name: Deploy EKS Cluster
+          command: |
+            cd .circleci
+            aws cloudformation deploy \
+              --tags project=${ENV_NAME}-capstone-project \
+              --stack-name "${ENV_NAME}-cluster" \
+              --region ${AWS_DEFAULT_REGION} \
+              --template-file cloudformation/cluster.yml \
+              --parameter-overrides file://cloudformation/cluster-parameters.json \
+              --capabilities CAPABILITY_NAMED_IAM
+          no_output_timeout: 15m
+      - run:
+          name: Deploy Nodegroup
+          command: |
+            pwd
+            cd .circleci
+            aws cloudformation deploy \
+              --tags project=${ENV_NAME}-capstone-project \
+              --stack-name "${ENV_NAME}-eks-nodegroup" \
+              --region ${AWS_DEFAULT_REGION} \
+              --template-file cloudformation/nodegroup.yml \
+              --parameter-overrides file://cloudformation/nodegroup-parameters.json \
+              --capabilities CAPABILITY_NAMED_IAM
+      - run:
+          name: Deploy management instances
+          command: |
+            pwd
+            cd .circleci
+            aws cloudformation deploy \
+              --tags project=${ENV_NAME}-capstone-project \
+              --stack-name "${ENV_NAME}-eks-management" \
+              --region ${AWS_DEFAULT_REGION} \
+              --template-file cloudformation/management.yml \
+              --parameter-overrides file://cloudformation/management-parameters.json \
+              --output text >> ~/deployLog.txt
+            cat ~/deployLog.txt
+      - run:
+          name: Exposing IP of management instance for Ansible
+          command: |
+            pwd
+            cd .circleci
+            echo [management] > ~/inventory.txt
+            aws ec2 describe-instances \
+              --region "${AWS_DEFAULT_REGION}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=${ENV_NAME}-management*" \
+              --output text >> ~/inventory.txt
+            cat ~/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - inventory.txt
+            - deployLog.txt
+  
+  configure-infrastructure:
+    docker:
+      - image: cimg/node:18.16.0
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "c3:f9:9d:dd:4b:57:10:ee:8c:28:d8:23:60:e7:ea:3d:a5:95:cb:0d"
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible openssh
+      - run:
+          name: Configure server
+          command: |
+            if grep -q "No changes to deploy" ~/deployLog.txt
+              then
+                cat ~/inventory.txt
+                echo "No change to management instances"
+              else
+                cat ~/inventory.txt
+                cd .circleci/ansible
+                ansible-playbook -i ~/inventory.txt configure-server.yml
+              fi
+  configure-cluster:
+    docker:
+      - image: cimg/node:18.16.0
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "c3:f9:9d:dd:4b:57:10:ee:8c:28:d8:23:60:e7:ea:3d:a5:95:cb:0d"
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible openssh
+      - run:
+          name: Configure server
+          command: |
+            if grep -q "No changes to deploy" ~/deployLog.txt
+              then
+                cat ~/inventory.txt
+                echo "No change to management instances"
+              else
+                cat ~/inventory.txt
+                cd .circleci/ansible
+                ansible-playbook -i ~/inventory.txt configure-cluster.yml
+              fi
+      - run:
+          name: Wait for LoadBalancer's go online
+          command: |
+            if grep -q "No changes to deploy" ~/deployLog.txt
+              then
+                cat ~/inventory.txt
+                echo "No change to management instances"
+              else
+                cat ~/inventory.txt
+                echo "Wait 60 seconds..."
+                sleep 60
+              fi
+      - run:
+          name: Display the LoadBalancer's DNS name
+          command: |
+            cat ~/inventory.txt
+            cd .circleci/ansible
+            ansible-playbook -i ~/inventory.txt save-elb-dns.yml
+            cat ~/elb_dns.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - elb_dns.txt
+
+  deploy-docker:
+    docker:
+      - image: cimg/node:18.16.0
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "c3:f9:9d:dd:4b:57:10:ee:8c:28:d8:23:60:e7:ea:3d:a5:95:cb:0d"
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible openssh
+      - run:
+          name: Deploy Docker Image
+          command: |
+            cat ~/inventory.txt
+            cd .circleci/ansible
+            ansible-playbook -i ~/inventory.txt deploy-app.yml
+          no_output_timeout: 2m
+
+# Orchestrate jobs using workflows
+# See: https://circleci.com/docs/configuration-reference/#workflows
+workflows:
+  default:
+    jobs:
+      - test-backend
+      - scan-backend
+      - build-and-push-image:
+          requires: [test-backend, scan-backend]
+      - deploy-infrastructure:
+          requires: [build-image]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - configure-cluster:
+          requires: [configure-infrastructure]
+      - deploy-docker:
+          requires: [configure-cluster]

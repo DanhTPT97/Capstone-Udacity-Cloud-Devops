@@ -1,0 +1,5 @@
+[
+    "EnvName=get-list-backend-service",
+    "SSHKeyName=danhtpt",
+    "amiImageId=ami-068663a3c619dd892"
+  ]
