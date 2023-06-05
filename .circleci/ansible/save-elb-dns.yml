@@ -21,5 +21,4 @@
         dest: "~/elb_dns.txt"
       delegate_to: localhost
   roles:
-    - backend-service-deployment
-    - backend-service
+    - install-kubectl
