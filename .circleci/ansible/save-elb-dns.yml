@@ -8,7 +8,7 @@
     ENV_NAME: "{{ lookup('env', 'ENV_NAME') }}"
   tasks:
     - name: Get the LoadBalancer's DNS name
-      shell: "./bin/kubectl get svc {{ ENV_NAME }}-cluster"
+      shell: "./bin/kubectl get svc"
       register: elb_dns
       args:
         chdir: $HOME
