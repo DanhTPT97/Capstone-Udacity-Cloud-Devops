@@ -8,5 +8,5 @@ spec:
     app: get-list-backend-service
   ports:
     - protocol: TCP
-      port: 3000a
+      port: 3000
       targetPort: 3000

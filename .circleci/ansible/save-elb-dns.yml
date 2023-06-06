@@ -7,8 +7,6 @@
   vars:
     ENV_NAME: "{{ lookup('env', 'ENV_NAME') }}"
   tasks:
-    - name: Get services
-      shell: "kubectl get svc"
     - name: Get the LoadBalancer's DNS name
       shell: "./bin/kubectl get svc {{ ENV_NAME }}"
       register: elb_dns

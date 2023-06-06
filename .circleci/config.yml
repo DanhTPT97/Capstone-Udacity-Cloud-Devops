@@ -10,13 +10,18 @@ jobs:
       - image: cimg/node:18.16.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-test]      
       - run:
           name: Backend test
           command: |
             cd backend
             npm install
             npm run test
-
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
+          
   scan-backend:
     docker:
       - image: cimg/node:18.16.0
@@ -149,6 +154,7 @@ jobs:
                 cd .circleci/ansible
                 ansible-playbook -i ~/inventory.txt configure-server.yml
               fi
+
   configure-cluster:
     docker:
       - image: python:3.11-rc-alpine

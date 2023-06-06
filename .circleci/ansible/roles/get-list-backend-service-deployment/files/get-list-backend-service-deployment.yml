@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: get-list-backend-service-backend-service-deployment
+  name: get-list-backend-service-deployment
   labels:
-    app: get-list-backend-service-backend-service
+    app: get-list-backend-service
 spec:
   replicas: 4
   selector:
