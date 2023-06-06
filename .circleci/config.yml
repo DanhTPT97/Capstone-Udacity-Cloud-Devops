@@ -69,7 +69,7 @@ jobs:
           command: |
             cd .circleci
             aws cloudformation deploy \
-              --stack-name "${ENV_NAME}-network" \
+              --stack-name "${ENV_NAME}-network1" \
               --region ${AWS_DEFAULT_REGION} \
               --template-file cloudformation/network.yml \
               --parameter-overrides file://cloudformation/network-parameters.json
