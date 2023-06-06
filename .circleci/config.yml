@@ -9,19 +9,14 @@ jobs:
     docker:
       - image: cimg/node:18.16.0
     steps:
-      - checkout
-      - restore_cache:
-          keys: [backend-test]      
+      - checkout     
       - run:
           name: Backend test
           command: |
             cd backend
             npm install
             npm run test
-      - save_cache:
-          paths: [backend/node_modules]
-          key: backend-build
-          
+
   scan-backend:
     docker:
       - image: cimg/node:18.16.0
